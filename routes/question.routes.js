@@ -234,45 +234,28 @@ router.get('/questions', async (req, res) => {
 });
 
 
-
 /**
  * @swagger
- * /questions:
- *   post:
- *     summary: Create a new question in the technical expert's library
+ * /questions/library:
+ *   get:
+ *     summary: Get all library questions created by the technical expert
  *     tags: [Questions]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Question'
  *     responses:
- *       201:
- *         description: Question created successfully
- *       403:
- *         description: Access denied
+ *       200:
+ *         description: List of library questions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Question'
  *       500:
  *         description: Server error
  */
-router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
+router.get('/questions/library', roleCheck(['technical_expert']), async (req, res) => {
     try {
-        const { questionText, questionType, options, difficulty } = req.body;
-        const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
-
-        // Create a new question document
-        const question = new Question({
-            questionText,
-            questionType,
-            options,
-            difficulty,
-            createdBy,
-            isLibraryQuestion: true
-        });
-
-        // Save the question
-        const savedQuestion = await question.save();
-        res.status(201).json(savedQuestion);
+        const questions = await Question.find({ createdBy: req.user._id });
+        res.status(200).json(questions);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
