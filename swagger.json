@@ -1,39 +1,50 @@
 {
-    "paths": {
-      "/assessments/{id}/clone": {
-        "post": {
-          "summary": "Clone an existing assessment",
-          "tags": ["Assessments"],
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": { "type": "string" },
-              "description": "The ID of the assessment to clone"
+    "components": {
+      "schemas": {
+        "Question": {
+          "type": "object",
+          "properties": {
+            "questionText": { "type": "string" },
+            "questionType": { "type": "string" },
+            "options": {
+              "type": "array",
+              "items": { "type": "string" }
             },
-            {
-              "name": "userId",
-              "in": "query",
-              "required": true,
-              "schema": { "type": "string" },
-              "description": "The ID of the user who will own the cloned assessment"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Cloned assessment created successfully",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Assessment" }
-                }
-              }
+            "createdBy": { "type": "string" },
+            "difficulty": {
+              "type": "string",
+              "enum": ["easy", "medium", "hard"]
             },
-            "404": { "description": "Original assessment not found" },
-            "500": { "description": "Server error" }
+            "isLibraryQuestion": { "type": "boolean" }
           }
         }
       }
+    },
+    "paths": {
+      "/questions": {
+        "get": {
+          "summary": "Get filtered questions",
+          "tags": ["Questions"],
+          "parameters": [
+            { "name": "difficulty", "in": "query", "schema": { "type": "string", "enum": ["easy", "medium", "hard"] }},
+            { "name": "isLibraryQuestion", "in": "query", "schema": { "type": "boolean" }},
+            { "name": "questionType", "in": "query", "schema": { "type": "string" }},
+            { "name": "createdBy", "in": "query", "schema": { "type": "string" }}
+          ],
+          "responses": { "200": { "description": "Filtered questions list", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Question" }}}}}
+        }
+      },
+      "/tests/{testId}/add-question": {
+        "post": {
+          "summary": "Add a library question to a custom test",
+          "tags": ["Tests"],
+          "parameters": [
+            { "name": "testId", "in": "path", "required": true, "schema": { "type": "string" }},
+            { "name": "questionId", "in": "query", "required": true, "schema": { "type": "string" }}
+          ],
+          "responses": { "200": { "description": "Question added successfully" }}
+        }
+      }
     }
-  }
-  
+}
+}  
