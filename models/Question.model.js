@@ -2,20 +2,37 @@
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
-    questionText: { type: String, required: true },
-    questionType: { type: mongoose.Schema.Types.ObjectId, ref: 'QuestionType', required: true },
-    options: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Option' }],
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
-    isLibraryQuestion: { type: Boolean, default: true },
-    selectionType: { type: String, enum: ['single', 'multi'], default: 'single' }, // New field to handle selection type
-    fillInTheBlanks: { 
-        type: [String], // Array of strings representing the blanks in the text
-        required: function() { return this.questionType.name === 'fill_in_the_blanks'; }
+    questionText: {
+        type: String,
+        required: true
     },
-    paragraphText: {
-        type: String, // Paragraph content for "paragraph" type questions
-        required: function() { return this.questionType.name === 'paragraph'; }
+    questionType: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'QuestionType',
+        required: true
+    },
+    options: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Option'
+    }],
+    difficultyLevel: {
+        type: String,
+        enum: ['easy', 'medium', 'hard'],
+        required: true
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    instruction: {
+        type: String,
+        required: false,  // Not required, but encouraged for guidance
+        maxlength: 500    // Limit to 500 characters
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 });
 
