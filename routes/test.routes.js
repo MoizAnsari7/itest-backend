@@ -189,4 +189,54 @@ router.delete('/tests/:id', async (req, res) => {
     }
 });
 
+
+
+/**
+ * @swagger
+ * /tests/{testId}/add-question:
+ *   post:
+ *     summary: Add a library question to a custom test
+ *     tags: [Tests]
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the test
+ *       - in: query
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the question to add
+ *     responses:
+ *       200:
+ *         description: Question added to test successfully
+ *       404:
+ *         description: Test or Question not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/tests/:testId/add-question', async (req, res) => {
+    try {
+        const { testId } = req.params;
+        const { questionId } = req.query;
+
+        // Fetch the test and ensure it exists
+        const test = await Test.findById(testId);
+        if (!test) return res.status(404).json({ message: 'Test not found' });
+
+        // Add the question to the test if it isn't already present
+        if (!test.questions.includes(questionId)) {
+            test.questions.push(questionId);
+            await test.save();
+        }
+        
+        res.status(200).json(test);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
