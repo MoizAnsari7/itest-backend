@@ -149,3 +149,36 @@ router.put('/assessments/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
+/**
+ * @swagger
+ * /assessments/{id}:
+ *   delete:
+ *     summary: Delete an assessment by ID
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The assessment ID
+ *     responses:
+ *       200:
+ *         description: Assessment deleted successfully
+ *       404:
+ *         description: Assessment not found
+ */
+router.delete('/assessments/:id', async (req, res) => {
+    try {
+        const assessment = await Assessment.findByIdAndDelete(req.params.id);
+        if (!assessment) return res.status(404).json({ message: 'Assessment not found' });
+        res.status(200).json({ message: 'Assessment deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+module.exports = router;
