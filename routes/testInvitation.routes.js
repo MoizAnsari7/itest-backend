@@ -1,9 +1,10 @@
 // routes/testInvitation.js
+// routes/testInvitation.js
 const express = require('express');
 const router = express.Router();
 const TestInvitation = require('../models/testInvitation');
-const Assessment = require('../models/assessment');
 const User = require('../models/user');
+const { sendTestInvitationEmail } = require('../utils/email'); // Email utility function
 const { roleCheck } = require('../middleware/auth');
 
 /**
@@ -46,7 +47,7 @@ const { roleCheck } = require('../middleware/auth');
 router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) => {
     try {
         const { assessment, user, validFrom, validUntil } = req.body;
-        const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
+        const createdBy = req.user._id;
 
         // Validate the provided dates
         const now = new Date();
@@ -64,14 +65,21 @@ router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) =>
         }
 
         const newInvitation = new TestInvitation({
-            assessment,  // Reference to the assessment
-            user,         // The user receiving the invitation
+            assessment,
+            user,
             validFrom: new Date(validFrom),
             validUntil: new Date(validUntil),
             createdBy
         });
 
         const savedInvitation = await newInvitation.save();
+
+        // Send invitation email with passkey
+        const userDoc = await User.findById(user);
+        if (userDoc) {
+            await sendTestInvitationEmail(userDoc.email, savedInvitation.passkey);
+        }
+
         res.status(201).json(savedInvitation);
     } catch (err) {
         res.status(500).json({ error: err.message });
