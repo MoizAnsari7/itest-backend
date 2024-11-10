@@ -108,5 +108,53 @@ router.get('/test-invitations', async (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /test-invitation/{passkey}:
+ *   get:
+ *     summary: Verify passkey for the test invitation
+ *     tags: [Test Invitations]
+ *     parameters:
+ *       - in: path
+ *         name: passkey
+ *         required: true
+ *         description: The passkey received by the user
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Passkey verified successfully, invitation status updated
+ *       400:
+ *         description: Invalid passkey
+ *       404:
+ *         description: Test invitation not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/test-invitation/:passkey', async (req, res) => {
+    const { passkey } = req.params;
+
+    try {
+        const invitation = await TestInvitation.findOne({ passkey });
+        if (!invitation) {
+            return res.status(404).json({ message: 'Test invitation not found' });
+        }
+
+        // Check if the invitation has expired
+        const now = new Date();
+        if (now < invitation.validFrom || now > invitation.validUntil) {
+            return res.status(400).json({ message: 'Test invitation has expired' });
+        }
+
+        // Update invitation status to 'accepted'
+        invitation.status = 'accepted';
+        await invitation.save();
+
+        res.status(200).json({ message: 'Passkey verified successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 module.exports = router;
