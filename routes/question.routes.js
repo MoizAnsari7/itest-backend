@@ -68,3 +68,37 @@ router.get('/questionTypes', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /questionTypes/{id}:
+ *   get:
+ *     summary: Get a question type by ID
+ *     tags: [QuestionTypes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The question type ID
+ *     responses:
+ *       200:
+ *         description: A question type object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/QuestionType'
+ *       404:
+ *         description: Question type not found
+ */
+router.get('/questionTypes/:id', async (req, res) => {
+    try {
+        const questionType = await QuestionType.findById(req.params.id);
+        if (!questionType) return res.status(404).json({ message: 'Question type not found' });
+        res.status(200).json(questionType);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
