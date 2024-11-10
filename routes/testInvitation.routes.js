@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const TestInvitation = require('../models/testInvitation');
-const Test = require('../models/test');
+const Assessment = require('../models/assessment');
 const User = require('../models/user');
 const { roleCheck } = require('../middleware/auth');
 
@@ -10,7 +10,7 @@ const { roleCheck } = require('../middleware/auth');
  * @swagger
  * /test-invitations:
  *   post:
- *     summary: Create a new test invitation with a validity period
+ *     summary: Create a new test invitation with a validity period linked to an assessment
  *     tags: [Test Invitations]
  *     requestBody:
  *       required: true
@@ -19,9 +19,9 @@ const { roleCheck } = require('../middleware/auth');
  *           schema:
  *             type: object
  *             properties:
- *               test:
+ *               assessment:
  *                 type: string
- *                 description: The ID of the test to be taken
+ *                 description: The ID of the assessment that contains the test
  *               user:
  *                 type: string
  *                 description: The ID of the user receiving the invitation
@@ -45,7 +45,7 @@ const { roleCheck } = require('../middleware/auth');
  */
 router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) => {
     try {
-        const { test, user, validFrom, validUntil } = req.body;
+        const { assessment, user, validFrom, validUntil } = req.body;
         const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
 
         // Validate the provided dates
@@ -57,9 +57,15 @@ router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) =>
             return res.status(400).json({ message: "validUntil must be after validFrom." });
         }
 
+        // Check if the assessment exists
+        const assessmentDoc = await Assessment.findById(assessment);
+        if (!assessmentDoc) {
+            return res.status(400).json({ message: "Assessment not found" });
+        }
+
         const newInvitation = new TestInvitation({
-            test,
-            user,
+            assessment,  // Reference to the assessment
+            user,         // The user receiving the invitation
             validFrom: new Date(validFrom),
             validUntil: new Date(validUntil),
             createdBy
@@ -71,27 +77,5 @@ router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) =>
         res.status(500).json({ error: err.message });
     }
 });
-
-
-// routes/testInvitation.js (GET)
-router.get('/test-invitations', async (req, res) => {
-    try {
-        const now = new Date();
-        const invitations = await TestInvitation.find({ status: { $ne: 'expired' } });
-
-        invitations.forEach(invitation => {
-            // Check if the invitation has expired
-            if (new Date(invitation.validUntil) < now) {
-                invitation.status = 'expired';
-                invitation.save(); // Save the updated status
-            }
-        });
-
-        res.status(200).json(invitations);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 
 module.exports = router;
