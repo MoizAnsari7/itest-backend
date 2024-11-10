@@ -5,7 +5,12 @@ const QuestionType = require('./questionType'); // Import for reference
 const optionSchema = new mongoose.Schema({
     content: { type: String, required: true },
     type: { type: String, enum: ['text', 'image', 'audio'], required: true },
-    isRightAnswer: { type: Boolean, default: false }
+    isRightAnswer: { type: Boolean, default: false },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to User collection
+        required: true
+    }
 });
 
 const questionSchema = new mongoose.Schema({
@@ -16,7 +21,12 @@ const questionSchema = new mongoose.Schema({
         required: true
     },
     options: [optionSchema],
-    addedBy: { type: String, required: true }
+    addedBy: { type: String, required: true },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to User collection
+        required: true
+    }
 });
 
 module.exports = mongoose.model('Question', questionSchema);
