@@ -1,50 +1,44 @@
 {
     "components": {
       "schemas": {
-        "Question": {
+        "TestInvitation": {
           "type": "object",
           "properties": {
-            "questionText": { "type": "string" },
-            "questionType": { "type": "string" },
-            "options": {
-              "type": "array",
-              "items": { "type": "string" }
-            },
-            "createdBy": { "type": "string" },
-            "difficulty": {
+            "test": { "type": "string", "description": "The ID of the test to be taken" },
+            "user": { "type": "string", "description": "The ID of the user receiving the invitation" },
+            "validFrom": { "type": "string", "format": "date-time", "description": "The start date/time of the validity period" },
+            "validUntil": { "type": "string", "format": "date-time", "description": "The end date/time of the validity period" },
+            "status": {
               "type": "string",
-              "enum": ["easy", "medium", "hard"]
+              "enum": ["pending", "accepted", "expired", "rejected"],
+              "description": "Status of the test invitation"
             },
-            "isLibraryQuestion": { "type": "boolean" }
+            "createdBy": { "type": "string", "description": "The user who created the invitation" }
           }
         }
       }
     },
     "paths": {
-      "/questions": {
-        "get": {
-          "summary": "Get filtered questions",
-          "tags": ["Questions"],
-          "parameters": [
-            { "name": "difficulty", "in": "query", "schema": { "type": "string", "enum": ["easy", "medium", "hard"] }},
-            { "name": "isLibraryQuestion", "in": "query", "schema": { "type": "boolean" }},
-            { "name": "questionType", "in": "query", "schema": { "type": "string" }},
-            { "name": "createdBy", "in": "query", "schema": { "type": "string" }}
-          ],
-          "responses": { "200": { "description": "Filtered questions list", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Question" }}}}}
-        }
-      },
-      "/tests/{testId}/add-question": {
+      "/test-invitations": {
         "post": {
-          "summary": "Add a library question to a custom test",
-          "tags": ["Tests"],
-          "parameters": [
-            { "name": "testId", "in": "path", "required": true, "schema": { "type": "string" }},
-            { "name": "questionId", "in": "query", "required": true, "schema": { "type": "string" }}
-          ],
-          "responses": { "200": { "description": "Question added successfully" }}
+          "summary": "Create a new test invitation with a validity period",
+          "tags": ["Test Invitations"],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TestInvitation" }
+              }
+            }
+          },
+          "responses": {
+            "201": { "description": "Test invitation created successfully" },
+            "400": { "description": "Invalid input data" },
+            "403": { "description": "Access denied" },
+            "500": { "description": "Server error" }
+          }
         }
       }
     }
-}
-}  
+  }
+  
