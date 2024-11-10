@@ -1,49 +1,23 @@
 {
     "components": {
       "schemas": {
-        "QuestionType": {
+        "Test": {
           "type": "object",
           "properties": {
-            "type": {
-              "type": "string",
-              "enum": ["mcq_four", "mcq_two", "true_false", "fill_in_the_blank"]
-            },
-            "description": {
-              "type": "string"
-            },
-            "createdBy": {
-              "type": "string",
-              "description": "User ID of the creator"
-            }
-          }
-        },
-        "Question": {
-          "type": "object",
-          "properties": {
-            "questionText": { "type": "string" },
-            "questionType": { "type": "string" },
-            "createdBy": {
-              "type": "string",
-              "description": "User ID of the creator"
-            },
-            "options": {
+            "questions": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/Option"
+                "type": "object",
+                "properties": {
+                  "question": { "type": "string" },
+                  "order": { "type": "integer" }
+                }
               }
-            }
-          }
-        },
-        "Option": {
-          "type": "object",
-          "properties": {
-            "content": { "type": "string" },
-            "type": { "type": "string", "enum": ["text", "image", "audio"] },
-            "isRightAnswer": { "type": "boolean" },
-            "createdBy": {
-              "type": "string",
-              "description": "User ID of the creator"
-            }
+            },
+            "timeAllocation": { "type": "integer" },
+            "totalQuestions": { "type": "integer" },
+            "createdBy": { "type": "string" },
+            "isLibraryTest": { "type": "boolean" }
           }
         }
       }
