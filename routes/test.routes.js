@@ -58,3 +58,32 @@ router.post('/tests', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
+/**
+ * @swagger
+ * /tests:
+ *   get:
+ *     summary: Get all tests
+ *     tags: [Tests]
+ *     responses:
+ *       200:
+ *         description: List of tests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Test'
+ *       500:
+ *         description: Server error
+ */
+router.get('/tests', async (req, res) => {
+    try {
+        const tests = await Test.find().populate('createdBy', 'email firstName lastName').populate('questions.question');
+        res.status(200).json(tests);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
