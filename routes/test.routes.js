@@ -158,3 +158,35 @@ router.put('/tests/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /tests/{id}:
+ *   delete:
+ *     summary: Delete a test by ID
+ *     tags: [Tests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The test ID
+ *     responses:
+ *       200:
+ *         description: Test deleted successfully
+ *       404:
+ *         description: Test not found
+ */
+router.delete('/tests/:id', async (req, res) => {
+    try {
+        const test = await Test.findByIdAndDelete(req.params.id);
+        if (!test) return res.status(404).json({ message: 'Test not found' });
+        res.status(200).json({ message: 'Test deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+module.exports = router;
