@@ -181,4 +181,58 @@ router.delete('/assessments/:id', async (req, res) => {
     }
 });
 
+
+
+/**
+ * @swagger
+ * /assessments/{id}/clone:
+ *   post:
+ *     summary: Clone an existing assessment
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the assessment to clone
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user who will own the cloned assessment
+ *     responses:
+ *       200:
+ *         description: Cloned assessment created successfully
+ *       404:
+ *         description: Original assessment not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/assessments/:id/clone', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.query;
+
+        // Fetch the original assessment by ID
+        const originalAssessment = await Assessment.findById(id).populate('sections.test');
+        if (!originalAssessment) return res.status(404).json({ message: 'Original assessment not found' });
+
+        // Create a new assessment with similar details, but with a new `createdBy` user
+        const clonedAssessment = new Assessment({
+            sections: originalAssessment.sections,
+            instructions: originalAssessment.instructions,
+            totalTime: originalAssessment.totalTime,
+            createdBy: userId  // Assign new user as the creator of the cloned assessment
+        });
+
+        // Save the cloned assessment
+        const savedClonedAssessment = await clonedAssessment.save();
+        res.status(200).json(savedClonedAssessment);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
