@@ -276,21 +276,22 @@ router.get('/questions', async (req, res) => {
  */
 router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
     try {
-        const { questionText, questionType, options, difficulty, fillInTheBlanks, paragraphText } = req.body;
+        const { questionText, questionType, options, difficultyLevel, instruction } = req.body;
+
         const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
 
         // Find the question type by name
         const questionTypeDoc = await QuestionType.findOne({ name: questionType });
         if (!questionTypeDoc) return res.status(400).json({ message: 'Invalid question type' });
 
-        let question = {
+        const question = new Question({
             questionText,
-            questionType: questionTypeDoc._id,
+            questionType,
             options,
-            difficulty,
-            createdBy,
-            isLibraryQuestion: true
-        };
+            difficultyLevel,
+            createdBy: req.user._id,
+            instruction  // Include instruction if provided
+        }); 
 
         if (questionType === 'fill_in_the_blanks' && fillInTheBlanks) {
             question.fillInTheBlanks = fillInTheBlanks;
@@ -435,6 +436,44 @@ router.get('/questions', async (req, res) => {
         res.status(200).json(questions);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+
+/**
+ * @swagger
+ * /questions/{id}:
+ *   get:
+ *     summary: Get question by ID with instruction
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Question ID
+ *     responses:
+ *       200:
+ *         description: The question data, including instruction
+ *       404:
+ *         description: Question not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/questions/:id', authMiddleware, async (req, res) => {
+    try {
+        const question = await Question.findById(req.params.id)
+            .populate('questionType')
+            .populate('options');
+
+        if (!question) {
+            return res.status(404).json({ message: 'Question not found' });
+        }
+
+        res.status(200).json(question);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
