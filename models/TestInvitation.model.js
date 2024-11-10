@@ -1,5 +1,6 @@
 // models/testInvitation.js
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const testInvitationSchema = new mongoose.Schema({
     assessment: { 
@@ -30,6 +31,19 @@ const testInvitationSchema = new mongoose.Schema({
         ref: 'User', 
         required: true 
     }, // Created by (HR or admin)
+    passkey: { 
+        type: String, 
+        required: true, 
+        unique: true 
+    } // Unique passkey for each invitation
+});
+
+// Generate a random passkey before saving
+testInvitationSchema.pre('save', function(next) {
+    if (!this.passkey) {
+        this.passkey = crypto.randomBytes(16).toString('hex'); // Generate a unique passkey
+    }
+    next();
 });
 
 module.exports = mongoose.model('TestInvitation', testInvitationSchema);
