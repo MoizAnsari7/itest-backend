@@ -18,12 +18,16 @@ const QuestionType = require('../models/questionType');
  *             required:
  *               - type
  *               - description
+ *               - createdBy
  *             properties:
  *               type:
  *                 type: string
  *                 enum: [mcq_four, mcq_two, true_false, fill_in_the_blank]
  *               description:
  *                 type: string
+ *               createdBy:
+ *                 type: string
+ *                 description: ID of the user creating this question type
  *     responses:
  *       200:
  *         description: The question type was created
@@ -39,7 +43,6 @@ router.post('/questionTypes', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 
 
 /**
@@ -62,7 +65,7 @@ router.post('/questionTypes', async (req, res) => {
  */
 router.get('/questionTypes', async (req, res) => {
     try {
-        const questionTypes = await QuestionType.find();
+        const questionTypes = await QuestionType.find().populate('createdBy', 'email firstName lastName');
         res.status(200).json(questionTypes);
     } catch (err) {
         res.status(500).json({ error: err.message });
