@@ -173,4 +173,64 @@ router.delete('/questionTypes/:id', async (req, res) => {
     }
 });
 
+
+/**
+ * @swagger
+ * /questions:
+ *   get:
+ *     summary: Get filtered questions
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: string
+ *           enum: [easy, medium, hard]
+ *         description: Difficulty level of the question
+ *       - in: query
+ *         name: isLibraryQuestion
+ *         schema:
+ *           type: boolean
+ *         description: Whether the question is a library question
+ *       - in: query
+ *         name: questionType
+ *         schema:
+ *           type: string
+ *         description: The ID of the question type
+ *       - in: query
+ *         name: createdBy
+ *         schema:
+ *           type: string
+ *         description: The ID of the user who created the question
+ *     responses:
+ *       200:
+ *         description: List of filtered questions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Question'
+ *       500:
+ *         description: Server error
+ */
+router.get('/questions', async (req, res) => {
+    try {
+        const { difficulty, isLibraryQuestion, questionType, createdBy } = req.query;
+
+        // Build the filter object based on query parameters
+        let filter = {};
+        if (difficulty) filter.difficulty = difficulty;
+        if (isLibraryQuestion) filter.isLibraryQuestion = isLibraryQuestion === 'true';
+        if (questionType) filter.questionType = questionType;
+        if (createdBy) filter.createdBy = createdBy;
+
+        // Fetch the filtered questions
+        const questions = await Question.find(filter).populate('questionType').populate('options');
+        res.status(200).json(questions);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
