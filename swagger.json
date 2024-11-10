@@ -1,0 +1,32 @@
+{
+    "components": {
+      "schemas": {
+        "User": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "example": "user@example.com"
+            },
+            "phone": {
+              "type": "string",
+              "example": "+1234567890"
+            },
+            "firstName": {
+              "type": "string",
+              "example": "John"
+            },
+            "lastName": {
+              "type": "string",
+              "example": "Doe"
+            },
+            "organization": {
+              "type": "string",
+              "example": "Example Corp"
+            }
+          }
+        }
+      }
+    }
+  }
+  
