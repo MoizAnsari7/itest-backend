@@ -157,4 +157,71 @@ router.get('/test-invitation/:passkey', async (req, res) => {
 });
 
 
+
+/**
+ * @swagger
+ * /test-invitations:
+ *   get:
+ *     summary: Get a filtered list of test invitations
+ *     tags: [Test Invitations]
+ *     parameters:
+ *       - in: query
+ *         name: assessmentId
+ *         schema:
+ *           type: string
+ *         description: Filter by specific assessment ID
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Start date for time interval filter
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: End date for time interval filter
+ *       - in: query
+ *         name: resultStatus
+ *         schema:
+ *           type: string
+ *           enum: [passed, failed, not_attempted]
+ *         description: Filter by assessment result status
+ *       - in: query
+ *         name: incidentsOnly
+ *         schema:
+ *           type: boolean
+ *         description: Filter invitations with incidents
+ *     responses:
+ *       200:
+ *         description: List of filtered test invitations
+ *       500:
+ *         description: Server error
+ */
+router.get('/test-invitations', authMiddleware, recruiterAuth, async (req, res) => {
+    try {
+        const { assessmentId, startDate, endDate, resultStatus, incidentsOnly } = req.query;
+
+        // Build query object based on filters
+        const query = {};
+
+        if (assessmentId) query.assessment = assessmentId;
+        if (startDate && endDate) query.sentAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        if (resultStatus) query['result.status'] = resultStatus;
+        if (incidentsOnly === 'true') query.incidents = { $exists: true, $ne: [] };
+
+        const invitations = await TestInvitation.find(query)
+            .populate('assessment', 'title') // Populate basic assessment details
+            .populate('candidate', 'firstName lastName email') // Populate candidate info
+            .sort({ sentAt: -1 });
+
+        res.status(200).json(invitations);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 module.exports = router;
