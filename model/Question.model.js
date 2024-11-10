@@ -1,4 +1,6 @@
+// models/question.js
 const mongoose = require('mongoose');
+const QuestionType = require('./questionType'); // Import for reference
 
 const optionSchema = new mongoose.Schema({
     content: { type: String, required: true },
@@ -9,8 +11,8 @@ const optionSchema = new mongoose.Schema({
 const questionSchema = new mongoose.Schema({
     questionText: { type: String, required: true },
     questionType: {
-        type: String,
-        enum: ['mcq_four', 'mcq_two', 'true_false', 'fill_in_the_blank'],
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'QuestionType', // Reference to QuestionType collection
         required: true
     },
     options: [optionSchema],
