@@ -51,3 +51,31 @@ router.post('/assessments', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /assessments:
+ *   get:
+ *     summary: Get all assessments
+ *     tags: [Assessments]
+ *     responses:
+ *       200:
+ *         description: List of assessments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Assessment'
+ *       500:
+ *         description: Server error
+ */
+router.get('/assessments', async (req, res) => {
+    try {
+        const assessments = await Assessment.find().populate('createdBy', 'email firstName lastName').populate('sections.test');
+        res.status(200).json(assessments);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
