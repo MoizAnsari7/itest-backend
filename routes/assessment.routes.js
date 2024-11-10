@@ -79,3 +79,37 @@ router.get('/assessments', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /assessments/{id}:
+ *   get:
+ *     summary: Get an assessment by ID
+ *     tags: [Assessments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The assessment ID
+ *     responses:
+ *       200:
+ *         description: An assessment object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Assessment'
+ *       404:
+ *         description: Assessment not found
+ */
+router.get('/assessments/:id', async (req, res) => {
+    try {
+        const assessment = await Assessment.findById(req.params.id).populate('createdBy', 'email firstName lastName').populate('sections.test');
+        if (!assessment) return res.status(404).json({ message: 'Assessment not found' });
+        res.status(200).json(assessment);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
