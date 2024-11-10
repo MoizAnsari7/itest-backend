@@ -4,16 +4,33 @@
         "TestInvitation": {
           "type": "object",
           "properties": {
-            "test": { "type": "string", "description": "The ID of the test to be taken" },
-            "user": { "type": "string", "description": "The ID of the user receiving the invitation" },
-            "validFrom": { "type": "string", "format": "date-time", "description": "The start date/time of the validity period" },
-            "validUntil": { "type": "string", "format": "date-time", "description": "The end date/time of the validity period" },
+            "assessment": { 
+              "type": "string", 
+              "description": "The ID of the assessment that contains the test" 
+            },
+            "user": { 
+              "type": "string", 
+              "description": "The ID of the user receiving the invitation" 
+            },
+            "validFrom": { 
+              "type": "string", 
+              "format": "date-time", 
+              "description": "The start date/time of the validity period" 
+            },
+            "validUntil": { 
+              "type": "string", 
+              "format": "date-time", 
+              "description": "The end date/time of the validity period" 
+            },
             "status": {
               "type": "string",
               "enum": ["pending", "accepted", "expired", "rejected"],
               "description": "Status of the test invitation"
             },
-            "createdBy": { "type": "string", "description": "The user who created the invitation" }
+            "createdBy": { 
+              "type": "string", 
+              "description": "The user who created the invitation" 
+            }
           }
         }
       }
@@ -21,7 +38,7 @@
     "paths": {
       "/test-invitations": {
         "post": {
-          "summary": "Create a new test invitation with a validity period",
+          "summary": "Create a new test invitation with a validity period linked to an assessment",
           "tags": ["Test Invitations"],
           "requestBody": {
             "required": true,
