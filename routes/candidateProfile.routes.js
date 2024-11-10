@@ -60,3 +60,37 @@ router.post('/candidate-profiles', authMiddleware, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /candidate-profiles/{id}:
+ *   get:
+ *     summary: Get a candidate profile by ID
+ *     tags: [Candidate Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The profile ID
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/candidate-profiles/:id', authMiddleware, async (req, res) => {
+    try {
+        const profile = await CandidateProfile.findById(req.params.id).populate('user');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found.' });
+        }
+        res.status(200).json(profile);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
