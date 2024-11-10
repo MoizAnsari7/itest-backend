@@ -134,3 +134,40 @@ router.put('/candidate-profiles/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+
+/**
+ * @swagger
+ * /candidate-profiles/{id}:
+ *   delete:
+ *     summary: Delete a candidate profile by ID
+ *     tags: [Candidate Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The profile ID
+ *     responses:
+ *       200:
+ *         description: Profile deleted successfully
+ *       404:
+ *         description: Profile not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/candidate-profiles/:id', authMiddleware, async (req, res) => {
+    try {
+        const profile = await CandidateProfile.findByIdAndDelete(req.params.id);
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found.' });
+        }
+        res.status(200).json({ message: 'Profile deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = router;
