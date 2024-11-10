@@ -138,3 +138,36 @@ router.put('/questionTypes/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
+/**
+ * @swagger
+ * /questionTypes/{id}:
+ *   delete:
+ *     summary: Delete a question type by ID
+ *     tags: [QuestionTypes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The question type ID
+ *     responses:
+ *       200:
+ *         description: Question type deleted successfully
+ *       404:
+ *         description: Question type not found
+ */
+router.delete('/questionTypes/:id', async (req, res) => {
+    try {
+        const questionType = await QuestionType.findByIdAndDelete(req.params.id);
+        if (!questionType) return res.status(404).json({ message: 'Question type not found' });
+        res.status(200).json({ message: 'Question type deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+module.exports = router;
