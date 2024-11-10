@@ -87,3 +87,37 @@ router.get('/tests', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /tests/{id}:
+ *   get:
+ *     summary: Get a test by ID
+ *     tags: [Tests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The test ID
+ *     responses:
+ *       200:
+ *         description: A test object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Test'
+ *       404:
+ *         description: Test not found
+ */
+router.get('/tests/:id', async (req, res) => {
+    try {
+        const test = await Test.findById(req.params.id).populate('createdBy', 'email firstName lastName').populate('questions.question');
+        if (!test) return res.status(404).json({ message: 'Test not found' });
+        res.status(200).json(test);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
