@@ -78,4 +78,27 @@ router.post('/test-invitations', roleCheck(['hr', 'admin']), async (req, res) =>
     }
 });
 
+
+// routes/testInvitation.js (GET)
+router.get('/test-invitations', async (req, res) => {
+    try {
+        const now = new Date();
+        const invitations = await TestInvitation.find({ status: { $ne: 'expired' } });
+
+        invitations.forEach(invitation => {
+            // Check if the invitation has expired
+            if (new Date(invitation.validUntil) < now) {
+                invitation.status = 'expired';
+                invitation.save(); // Save the updated status
+            }
+        });
+
+        res.status(200).json(invitations);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
 module.exports = router;
