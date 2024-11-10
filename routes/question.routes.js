@@ -1,7 +1,9 @@
 // routes/questionType.js
 const express = require('express');
 const router = express.Router();
+const Question = require('../models/question');
 const QuestionType = require('../models/questionType');
+const { roleCheck } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -236,26 +238,72 @@ router.get('/questions', async (req, res) => {
 
 /**
  * @swagger
- * /questions/library:
- *   get:
- *     summary: Get all library questions created by the technical expert
+ * /questions:
+ *   post:
+ *     summary: Create a new question in the technical expert's library (with support for Paragraph and Fill-in-the-Blanks)
  *     tags: [Questions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               questionText:
+ *                 type: string
+ *               questionType:
+ *                 type: string
+ *               options:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                 description: For MCQ type questions
+ *               fillInTheBlanks:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of blanks to be filled (only for Fill in the Blanks)
+ *               paragraphText:
+ *                 type: string
+ *                 description: Paragraph content (only for Paragraph type)
  *     responses:
- *       200:
- *         description: List of library questions
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Question'
+ *       201:
+ *         description: Question created successfully
+ *       403:
+ *         description: Access denied
  *       500:
  *         description: Server error
  */
-router.get('/questions/library', roleCheck(['technical_expert']), async (req, res) => {
+router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
     try {
-        const questions = await Question.find({ createdBy: req.user._id });
-        res.status(200).json(questions);
+        const { questionText, questionType, options, difficulty, fillInTheBlanks, paragraphText } = req.body;
+        const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
+
+        // Find the question type by name
+        const questionTypeDoc = await QuestionType.findOne({ name: questionType });
+        if (!questionTypeDoc) return res.status(400).json({ message: 'Invalid question type' });
+
+        let question = {
+            questionText,
+            questionType: questionTypeDoc._id,
+            options,
+            difficulty,
+            createdBy,
+            isLibraryQuestion: true
+        };
+
+        if (questionType === 'fill_in_the_blanks' && fillInTheBlanks) {
+            question.fillInTheBlanks = fillInTheBlanks;
+        }
+
+        if (questionType === 'paragraph' && paragraphText) {
+            question.paragraphText = paragraphText;
+        }
+
+        // Create and save the question
+        const newQuestion = new Question(question);
+        const savedQuestion = await newQuestion.save();
+        res.status(201).json(savedQuestion);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
