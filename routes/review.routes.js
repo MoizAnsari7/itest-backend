@@ -66,3 +66,49 @@ router.post('/reviews', authMiddleware, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+/**
+ * @swagger
+ * /reviews/assessment/{assessmentId}:
+ *   get:
+ *     summary: Get reviews for a specific assessment
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: assessmentId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the assessment
+ *     responses:
+ *       200:
+ *         description: List of reviews for the assessment
+ *       404:
+ *         description: Assessment not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/reviews/assessment/:assessmentId', authMiddleware, async (req, res) => {
+    try {
+        const { assessmentId } = req.params;
+
+        // Find reviews linked to assessments via TestInvitation
+        const reviews = await Review.find()
+            .populate({
+                path: 'testInvitation',
+                match: { assessment: assessmentId },
+                select: 'assessment'
+            })
+            .populate('candidate', 'firstName lastName email')
+            .exec();
+
+        if (!reviews.length) {
+            return res.status(404).json({ message: 'No reviews found for this assessment.' });
+        }
+
+        res.status(200).json(reviews);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
