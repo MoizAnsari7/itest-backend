@@ -1,28 +1,48 @@
 {
     "components": {
       "schemas": {
-        "User": {
+        "QuestionType": {
           "type": "object",
           "properties": {
-            "email": {
+            "type": {
               "type": "string",
-              "example": "user@example.com"
+              "enum": ["mcq_four", "mcq_two", "true_false", "fill_in_the_blank"]
             },
-            "phone": {
-              "type": "string",
-              "example": "+1234567890"
+            "description": {
+              "type": "string"
             },
-            "firstName": {
+            "createdBy": {
               "type": "string",
-              "example": "John"
+              "description": "User ID of the creator"
+            }
+          }
+        },
+        "Question": {
+          "type": "object",
+          "properties": {
+            "questionText": { "type": "string" },
+            "questionType": { "type": "string" },
+            "createdBy": {
+              "type": "string",
+              "description": "User ID of the creator"
             },
-            "lastName": {
+            "options": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Option"
+              }
+            }
+          }
+        },
+        "Option": {
+          "type": "object",
+          "properties": {
+            "content": { "type": "string" },
+            "type": { "type": "string", "enum": ["text", "image", "audio"] },
+            "isRightAnswer": { "type": "boolean" },
+            "createdBy": {
               "type": "string",
-              "example": "Doe"
-            },
-            "organization": {
-              "type": "string",
-              "example": "Example Corp"
+              "description": "User ID of the creator"
             }
           }
         }
