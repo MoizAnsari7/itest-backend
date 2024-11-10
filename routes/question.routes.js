@@ -1,8 +1,8 @@
-// routes/questionType.js
 const express = require('express');
 const router = express.Router();
 const Question = require('../models/question');
 const QuestionType = require('../models/questionType');
+const Option = require('../models/option');
 const { roleCheck } = require('../middleware/auth');
 
 /**
@@ -309,5 +309,133 @@ router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
     }
 });
 
+
+
+/**
+ * @swagger
+ * /questions:
+ *   post:
+ *     summary: Create a new question (Single select or Multi-select)
+ *     tags: [Questions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               questionText:
+ *                 type: string
+ *               questionType:
+ *                 type: string
+ *               options:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                 description: List of options, each option can be a single-select or multi-select
+ *               selectionType:
+ *                 type: string
+ *                 enum: ["single", "multi"]
+ *               difficulty:
+ *                 type: string
+ *                 enum: ["easy", "medium", "hard"]
+ *     responses:
+ *       201:
+ *         description: Question created successfully
+ *       403:
+ *         description: Access denied
+ *       500:
+ *         description: Server error
+ */
+router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
+    try {
+        const { questionText, questionType, options, difficulty, selectionType, fillInTheBlanks, paragraphText } = req.body;
+        const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
+
+        // Find the question type by name
+        const questionTypeDoc = await QuestionType.findOne({ name: questionType });
+        if (!questionTypeDoc) return res.status(400).json({ message: 'Invalid question type' });
+
+        // Create options
+        const optionDocs = await Promise.all(
+            options.map(async (opt) => {
+                const option = new Option({
+                    content: opt.content,
+                    isRightAnswer: opt.isRightAnswer,
+                    isMultiSelect: selectionType === 'multi' && opt.isRightAnswer
+                });
+                return option.save();
+            })
+        );
+
+        let question = {
+            questionText,
+            questionType: questionTypeDoc._id,
+            options: optionDocs.map(opt => opt._id),
+            difficulty,
+            createdBy,
+            selectionType,
+            isLibraryQuestion: true
+        };
+
+        // Handle Fill-in-the-Blanks and Paragraph types
+        if (questionType === 'fill_in_the_blanks' && fillInTheBlanks) {
+            question.fillInTheBlanks = fillInTheBlanks;
+        }
+
+        if (questionType === 'paragraph' && paragraphText) {
+            question.paragraphText = paragraphText;
+        }
+
+        // Create and save the question
+        const newQuestion = new Question(question);
+        const savedQuestion = await newQuestion.save();
+        res.status(201).json(savedQuestion);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+/**
+ * @swagger
+ * /questions:
+ *   get:
+ *     summary: Get all questions with optional filter on selectionType (single or multi)
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: query
+ *         name: selectionType
+ *         schema:
+ *           type: string
+ *           enum: ["single", "multi"]
+ *         description: Filter questions based on selection type
+ *     responses:
+ *       200:
+ *         description: List of questions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Question'
+ *       500:
+ *         description: Server error
+ */
+router.get('/questions', async (req, res) => {
+    try {
+        const { selectionType } = req.query;
+
+        let filter = {};
+        if (selectionType) {
+            filter.selectionType = selectionType;
+        }
+
+        const questions = await Question.find(filter).populate('options');
+        res.status(200).json(questions);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = router;
