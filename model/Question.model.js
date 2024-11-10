@@ -1,32 +1,13 @@
 // models/question.js
 const mongoose = require('mongoose');
-const QuestionType = require('./questionType'); // Import for reference
-
-const optionSchema = new mongoose.Schema({
-    content: { type: String, required: true },
-    type: { type: String, enum: ['text', 'image', 'audio'], required: true },
-    isRightAnswer: { type: Boolean, default: false },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Reference to User collection
-        required: true
-    }
-});
 
 const questionSchema = new mongoose.Schema({
     questionText: { type: String, required: true },
-    questionType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'QuestionType', // Reference to QuestionType collection
-        required: true
-    },
-    options: [optionSchema],
-    addedBy: { type: String, required: true },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Reference to User collection
-        required: true
-    }
+    questionType: { type: mongoose.Schema.Types.ObjectId, ref: 'QuestionType', required: true },
+    options: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Option' }],
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' }, // New field
+    isLibraryQuestion: { type: Boolean, default: false } // New field
 });
 
 module.exports = mongoose.model('Question', questionSchema);
