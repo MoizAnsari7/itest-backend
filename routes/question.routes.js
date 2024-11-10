@@ -39,3 +39,32 @@ router.post('/questionTypes', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
+/**
+ * @swagger
+ * /questionTypes:
+ *   get:
+ *     summary: Retrieve all question types
+ *     tags: [QuestionTypes]
+ *     responses:
+ *       200:
+ *         description: A list of question types
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/QuestionType'
+ *       500:
+ *         description: Server error
+ */
+router.get('/questionTypes', async (req, res) => {
+    try {
+        const questionTypes = await QuestionType.find();
+        res.status(200).json(questionTypes);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
