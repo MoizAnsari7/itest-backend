@@ -1,7 +1,9 @@
 // routes/questionType.js
 const express = require('express');
 const router = express.Router();
+const Question = require('../models/question');
 const QuestionType = require('../models/questionType');
+const { roleCheck } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -234,19 +236,36 @@ router.get('/questions', async (req, res) => {
 });
 
 
-
 /**
  * @swagger
  * /questions:
  *   post:
- *     summary: Create a new question in the technical expert's library
+ *     summary: Create a new question in the technical expert's library (with support for Paragraph and Fill-in-the-Blanks)
  *     tags: [Questions]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Question'
+ *             type: object
+ *             properties:
+ *               questionText:
+ *                 type: string
+ *               questionType:
+ *                 type: string
+ *               options:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                 description: For MCQ type questions
+ *               fillInTheBlanks:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of blanks to be filled (only for Fill in the Blanks)
+ *               paragraphText:
+ *                 type: string
+ *                 description: Paragraph content (only for Paragraph type)
  *     responses:
  *       201:
  *         description: Question created successfully
@@ -257,21 +276,33 @@ router.get('/questions', async (req, res) => {
  */
 router.post('/questions', roleCheck(['technical_expert']), async (req, res) => {
     try {
-        const { questionText, questionType, options, difficulty } = req.body;
+        const { questionText, questionType, options, difficulty, fillInTheBlanks, paragraphText } = req.body;
         const createdBy = req.user._id; // Assuming req.user contains the authenticated user's details
 
-        // Create a new question document
-        const question = new Question({
+        // Find the question type by name
+        const questionTypeDoc = await QuestionType.findOne({ name: questionType });
+        if (!questionTypeDoc) return res.status(400).json({ message: 'Invalid question type' });
+
+        let question = {
             questionText,
-            questionType,
+            questionType: questionTypeDoc._id,
             options,
             difficulty,
             createdBy,
             isLibraryQuestion: true
-        });
+        };
 
-        // Save the question
-        const savedQuestion = await question.save();
+        if (questionType === 'fill_in_the_blanks' && fillInTheBlanks) {
+            question.fillInTheBlanks = fillInTheBlanks;
+        }
+
+        if (questionType === 'paragraph' && paragraphText) {
+            question.paragraphText = paragraphText;
+        }
+
+        // Create and save the question
+        const newQuestion = new Question(question);
+        const savedQuestion = await newQuestion.save();
         res.status(201).json(savedQuestion);
     } catch (err) {
         res.status(500).json({ error: err.message });
